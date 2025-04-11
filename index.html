@@ -2,7 +2,8 @@
 <html lang="zh">
 <head>
   <meta charset="UTF-8">
-  <title>图层对比滑杆</title>
+  <title>图层对比滑杆 + 音乐播放</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     * {
       box-sizing: border-box;
@@ -11,19 +12,22 @@
       margin: 0;
       font-family: sans-serif;
       display: flex;
-      justify-content: center;
+      flex-direction: column;
       align-items: center;
-      height: 100vh;
       background: #111;
-      user-select: none; /* 禁止选中页面内容 */
+      user-select: none;
+      -webkit-user-select: none;
+      touch-action: none;
+      color: white;
     }
     .container {
       position: relative;
-      width: 800px;
-      height: 500px;
+      width: 100%;
+      max-width: 800px;
+      height: 60vh;
+      max-height: 500px;
       overflow: hidden;
       cursor: ew-resize;
-      user-select: none;
     }
     .container img {
       position: absolute;
@@ -32,12 +36,10 @@
       height: 100%;
       width: 100%;
       object-fit: cover;
-      pointer-events: none; /* 鼠标穿透图片，避免误选 */
+      pointer-events: none;
       user-select: none;
     }
     .img-top {
-      width: 50%;
-      overflow: hidden;
       clip-path: inset(0 50% 0 0);
     }
     .slider {
@@ -48,8 +50,6 @@
       width: 3px;
       background: white;
       z-index: 10;
-      cursor: ew-resize;
-      transition: background 0.3s;
     }
     .slider::before {
       content: "";
@@ -62,6 +62,39 @@
       border-radius: 50%;
       transform: translate(-50%, -50%);
     }
+
+    .audio-section {
+      margin-top: 20px;
+      text-align: center;
+    }
+
+    .play-button {
+      font-size: 36px;
+      cursor: pointer;
+      user-select: none;
+      transition: transform 0.2s;
+    }
+
+    .play-button:hover {
+      transform: scale(1.2);
+    }
+
+    .audio-text {
+      margin-top: 10px;
+      font-size: 22px;
+      font-family: 'Comic Sans MS', 'KaiTi', cursive;
+      color: #ffd;
+    }
+
+    @media (max-width: 600px) {
+      .slider::before {
+        width: 16px;
+        height: 16px;
+      }
+      .audio-text {
+        font-size: 18px;
+      }
+    }
   </style>
 </head>
 <body>
@@ -71,30 +104,63 @@
     <div class="slider" id="slider"></div>
   </div>
 
+  <!-- 音乐播放区域 -->
+  <div class="audio-section">
+    <div class="play-button" id="playBtn">🎵</div>
+    <audio id="audio" src="1.mp3"></audio>
+  </div>
+
   <script>
     const container = document.getElementById('compare-container');
     const topImage = document.getElementById('top-image');
     const slider = document.getElementById('slider');
 
-    let isDown = false;
+    let isDragging = false;
 
-    const moveSlider = (e) => {
-      if (!isDown) return;
+    function updateSlider(x) {
       const rect = container.getBoundingClientRect();
-      let x = e.clientX - rect.left;
-      x = Math.max(0, Math.min(x, rect.width));
-      const percent = (x / rect.width) * 100;
+      let offsetX = x - rect.left;
+      offsetX = Math.max(0, Math.min(offsetX, rect.width));
+      const percent = (offsetX / rect.width) * 100;
       topImage.style.clipPath = `inset(0 ${100 - percent}% 0 0)`;
       slider.style.left = `${percent}%`;
-    };
+    }
 
+    // 鼠标事件
     container.addEventListener('mousedown', (e) => {
-      isDown = true;
-      moveSlider(e);
+      isDragging = true;
+      updateSlider(e.clientX);
     });
-    container.addEventListener('mouseup', () => isDown = false);
-    container.addEventListener('mouseleave', () => isDown = false);
-    container.addEventListener('mousemove', moveSlider);
+    document.addEventListener('mouseup', () => isDragging = false);
+    document.addEventListener('mousemove', (e) => {
+      if (isDragging) updateSlider(e.clientX);
+    });
+
+    // 触摸事件
+    container.addEventListener('touchstart', (e) => {
+      isDragging = true;
+      updateSlider(e.touches[0].clientX);
+    });
+    document.addEventListener('touchend', () => isDragging = false);
+    document.addEventListener('touchmove', (e) => {
+      if (isDragging) updateSlider(e.touches[0].clientX);
+    });
+
+    // 音乐播放控制
+    const audio = document.getElementById('audio');
+    const playBtn = document.getElementById('playBtn');
+    let isPlaying = false;
+
+    playBtn.addEventListener('click', () => {
+      if (isPlaying) {
+        audio.pause();
+        playBtn.textContent = '📢';
+      } else {
+        audio.play();
+        playBtn.textContent = '⏸️';
+      }
+      isPlaying = !isPlaying;
+    });
   </script>
 </body>
 </html>
