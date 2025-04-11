@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <title>图层对比滑杆</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      margin: 0;
+      font-family: sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      background: #111;
+      user-select: none; /* 禁止选中页面内容 */
+    }
+    .container {
+      position: relative;
+      width: 800px;
+      height: 500px;
+      overflow: hidden;
+      cursor: ew-resize;
+      user-select: none;
+    }
+    .container img {
+      position: absolute;
+      top: 0;
+      left: 0;
+      height: 100%;
+      width: 100%;
+      object-fit: cover;
+      pointer-events: none; /* 鼠标穿透图片，避免误选 */
+      user-select: none;
+    }
+    .img-top {
+      width: 50%;
+      overflow: hidden;
+      clip-path: inset(0 50% 0 0);
+    }
+    .slider {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 50%;
+      width: 3px;
+      background: white;
+      z-index: 10;
+      cursor: ew-resize;
+      transition: background 0.3s;
+    }
+    .slider::before {
+      content: "";
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 20px;
+      height: 20px;
+      background: white;
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+    }
+  </style>
+</head>
+<body>
+  <div class="container" id="compare-container">
+    <img src="1.png" alt="底图">
+    <img src="2.png" class="img-top" alt="上层图" id="top-image">
+    <div class="slider" id="slider"></div>
+  </div>
+
+  <script>
+    const container = document.getElementById('compare-container');
+    const topImage = document.getElementById('top-image');
+    const slider = document.getElementById('slider');
+
+    let isDown = false;
+
+    const moveSlider = (e) => {
+      if (!isDown) return;
+      const rect = container.getBoundingClientRect();
+      let x = e.clientX - rect.left;
+      x = Math.max(0, Math.min(x, rect.width));
+      const percent = (x / rect.width) * 100;
+      topImage.style.clipPath = `inset(0 ${100 - percent}% 0 0)`;
+      slider.style.left = `${percent}%`;
+    };
+
+    container.addEventListener('mousedown', (e) => {
+      isDown = true;
+      moveSlider(e);
+    });
+    container.addEventListener('mouseup', () => isDown = false);
+    container.addEventListener('mouseleave', () => isDown = false);
+    container.addEventListener('mousemove', moveSlider);
+  </script>
+</body>
+</html>
